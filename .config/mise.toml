@@ -40,7 +40,10 @@ run = [
 
 [tasks."lint:types"]
 description = "Check types"
-run = "uv run --locked pyright"
+run = [
+  "uv run --locked pyright --pythonversion 3.14",
+  "uv run --locked pyright --pythonversion 3.15",
+]
 
 [tasks."lint:workflows"]
 description = "Audit GitHub Actions files"
