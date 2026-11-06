@@ -10,6 +10,12 @@ strict = true  # Check code blocks too
 
 # These pages are all mkdocstrings.
 [per-file-ignores]
+"docs/constants/*.md" = [
+  "MD041",
+]
+"docs/exceptions/*.md" = [
+  "MD041",
+]
 "docs/functions/*.md" = [
   "MD041",
 ]
