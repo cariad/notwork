@@ -20,7 +20,13 @@ from pytest import mark, param, raises
 from notwork import claim_port
 from notwork.exceptions import PortInUseError, PortOutOfRangeError, PortTypeError
 
-from .marks import holds_wildcards, needs_dual_stack, needs_ipv6
+from .marks import (
+    holds_wildcards,
+    needs_dual_stack,
+    needs_ipv6,
+    posix_only,
+    windows_only,
+)
 from .os_error import make_os_error
 
 
@@ -267,7 +273,41 @@ def test_claim_port_raises_for_port_out_of_range(port: int) -> None:
     assert result == expect
 
 
+@contextmanager
+def _bound_by_other(
+    host: str,
+    port: int,
+    *,
+    dual_stack: bool,
+) -> Generator[socket]:
+    """
+    Bind `host` and `port` as another program would, with `SO_REUSEADDR` set, and
+    yield the socket.
+
+    Args:
+        host: Address to bind.
+        port: Port to bind.
+        dual_stack: Whether or not an IPv6 socket accepts IPv4 too.
+    """
+    family = AF_INET6 if ":" in host else AF_INET
+
+    with socket(family, SOCK_STREAM) as sock:
+        sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, True)
+
+        if family == AF_INET6:
+            sock.setsockopt(
+                IPPROTO_IPV6,
+                IPV6_V6ONLY,
+                not dual_stack,
+            )
+
+        sock.bind((host, port))
+
+        yield sock
+
+
 @holds_wildcards
+@posix_only
 @mark.parametrize(
     (
         "host",
@@ -299,22 +339,79 @@ def test_claim_port_keeps_other_programs_off_wildcards(
     Assert that, while a port is claimed, another program can't bind its wildcard
     addresses.
     """
-    family = AF_INET6 if ":" in host else AF_INET
-
     with (
         _claimed(free_port),
-        socket(family, SOCK_STREAM) as other,
         raises(OSError) as ex,
+        _bound_by_other(
+            host,
+            free_port,
+            dual_stack=dual_stack,
+        ),
     ):
-        other.setsockopt(SOL_SOCKET, SO_REUSEADDR, True)
-
-        if family == AF_INET6:
-            other.setsockopt(IPPROTO_IPV6, IPV6_V6ONLY, not dual_stack)
-
-        other.bind((host, free_port))
+        pass
 
     result = ex.value.errno
     expect = EADDRINUSE
+
+    assert result == expect
+
+
+@windows_only
+@mark.parametrize(
+    "host",
+    [
+        "0.0.0.0",
+        param(
+            "::",
+            marks=needs_ipv6,
+        ),
+    ],
+)
+def test_claim_port_keeps_other_programs_off_wildcards_on_windows(
+    free_port: int,
+    host: str,
+) -> None:
+    """
+    Assert that, while a port is claimed on Windows, another program can't bind its
+    wildcard addresses with a socket that accepts only IPv4 or only IPv6.
+    """
+    with (
+        _claimed(free_port),
+        raises(OSError) as ex,
+        _bound_by_other(
+            host,
+            free_port,
+            dual_stack=False,
+        ),
+    ):
+        pass
+
+    result = ex.value.errno
+    expect = EACCES
+
+    assert result == expect
+
+
+@windows_only
+@needs_dual_stack
+def test_claim_port_lets_other_programs_bind_dual_stack_on_windows(
+    free_port: int,
+) -> None:
+    """
+    Assert that, while a port is claimed on Windows, another program can bind `::` with
+    a socket that accepts IPv4 and IPv6 at once.
+    """
+    with (
+        _claimed(free_port),
+        _bound_by_other(
+            "::",
+            free_port,
+            dual_stack=True,
+        ) as other,
+    ):
+        result = other.getsockname()[:2]
+
+    expect = ("::", free_port)
 
     assert result == expect
 

@@ -98,6 +98,9 @@ def claim_port(port: int) -> ClaimedPort:
     them, and then must release the port by closing the port — not by closing its
     sockets.
 
+    **Windows:** While the port is claimed, another program can still bind it on `::`
+    with a socket that accepts IPv4 and IPv6 at once.
+
     Args:
         port: Port to claim.
 
