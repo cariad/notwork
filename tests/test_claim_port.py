@@ -77,6 +77,18 @@ def _listen(
         yield sock.getsockname()[1]
 
 
+class _RecordingSocket(socket):
+    """A socket that records whether or not it has listened."""
+
+    listened = False
+    """Whether or not this socket has listened."""
+
+    def listen(self, *args: int) -> None:
+        """Listen, and record that this socket has listened."""
+        super().listen(*args)
+        self.listened = True
+
+
 @needs_ipv6
 def test_claim_port_claims_every_loopback(free_port: int) -> None:
     """Assert that `claim_port` claims `127.0.0.1` and `::1` on a machine with IPv6."""
@@ -260,6 +272,75 @@ def test_claim_port_raises_for_busy_port(
     result = ex.value.port
     expect = port
 
+    assert result == expect
+
+
+def test_claim_port_raises_for_claimed_port(free_port: int) -> None:
+    """
+    Assert that `claim_port` raises `PortInUseError` for a port that's claimed but not
+    yet listened on by its claimant.
+    """
+    with (
+        _claimed(free_port),
+        raises(PortInUseError) as ex,
+    ):
+        claim_port(free_port)
+
+    result = ex.value.port
+    expect = free_port
+
+    assert result == expect
+
+
+def test_claim_port_listens_after_competing_claim(free_port: int) -> None:
+    """
+    Assert that a claimed port's sockets can listen after another claim of the port
+    failed.
+    """
+    with _claimed(free_port) as sockets:
+        with raises(PortInUseError):
+            claim_port(free_port)
+
+        for sock in sockets:
+            sock.listen()
+
+        result: list[int] = []
+
+        for sock in sockets:
+            with create_connection(sock.getsockname()[:2], timeout=5):
+                result.append(sock.getsockname()[1])
+
+    expect = [free_port] * len(result)
+
+    assert result
+    assert result == expect
+
+
+@mark.parametrize(
+    "listen_on_claim",
+    [
+        False,
+        True,
+    ],
+)
+def test_claim_port_listens_on_claim(
+    free_port: int,
+    listen_on_claim: bool,
+) -> None:
+    """
+    Assert that `claim_port`'s sockets listen as soon as they're bound only where that's
+    needed to keep other claims off the port.
+    """
+    with (
+        patch("notwork.claim_port._LISTEN_ON_CLAIM", listen_on_claim),
+        patch("notwork.claim_port.socket", _RecordingSocket),
+        _claimed(free_port) as sockets,
+    ):
+        result = [cast("_RecordingSocket", sock).listened for sock in sockets]
+
+    expect = [listen_on_claim] * len(result)
+
+    assert result
     assert result == expect
 
 

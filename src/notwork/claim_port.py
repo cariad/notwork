@@ -38,6 +38,12 @@ _REUSE_ADDRESS = sys.platform != "win32"
 # listen only on other addresses, which `localhost` doesn't reach.
 _HOLD_WILDCARDS = sys.platform not in ("android", "linux")
 
+# Linux lets two sockets with `SO_REUSEADDR` bind the same address while neither
+# listens, so another claim of the port would succeed. A listening socket keeps every
+# other socket off its address, so each socket listens as soon as it's bound. If another
+# claim bound the address first, whichever socket listens second fails.
+_LISTEN_ON_CLAIM = sys.platform in ("android", "linux")
+
 _WILDCARDS: dict[AddressFamily, str] = {
     family: host
     for family, host in ((AF_INET, "0.0.0.0"), (AF_INET6, "::"))
@@ -75,6 +81,9 @@ def _bind(
         try:
             sock.bind((host, port))
 
+            if _LISTEN_ON_CLAIM:
+                sock.listen()
+
         except OSError as error:
             if error.errno == EADDRINUSE:
                 raise PortInUseError(port) from error
@@ -92,12 +101,17 @@ def claim_port(port: int) -> ClaimedPort:
     """
     Claim `port` on every address that `localhost` can mean on this machine.
 
-    The claimed port's sockets are bound but not listening. The caller can listen on
-    them, and then must release the port by closing the port — not by closing its
-    sockets.
+    To accept connections, call `listen()` on each of the claimed port's sockets. To
+    release the port, close the claimed port, not its sockets.
 
-    **Windows:** While the port is claimed, another program can still bind it on `::`
-    with a socket that accepts IPv4 and IPv6 at once.
+    **Linux:** The sockets are already listening when they're returned. Calling
+    `listen()` on them is still safe.
+
+    **macOS:** The sockets don't listen until you call `listen()` on them.
+
+    **Windows:** The sockets don't listen until you call `listen()` on them. While the
+    port is claimed, another program can still bind it on `::` with a socket that
+    accepts IPv4 and IPv6 at once.
 
     Args:
         port: Port to claim.
