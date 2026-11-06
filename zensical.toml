@@ -4,6 +4,7 @@ nav = [
   { "Get started" = "index.md" },
   { "Functions" = [
     { "check_port_is_in_range" = "functions/check_port_is_in_range.md" },
+    { "has_ipv6" = "functions/has_ipv6.md" },
     { "is_port_in_range" = "functions/is_port_in_range.md" },
   ] },
   { "Exceptions" = [
