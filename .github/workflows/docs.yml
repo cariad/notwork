@@ -7,6 +7,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: docs-workflow-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   MISE_LOCKED: 1
 
