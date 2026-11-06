@@ -28,6 +28,11 @@ SECTIONS = [
         navigation="Functions",
     ),
     Section(
+        directory="models",
+        module="notwork.models",
+        navigation="Models",
+    ),
+    Section(
         directory="exceptions",
         module="notwork.exceptions",
         navigation="Exceptions",
@@ -42,6 +47,7 @@ CONSTANTS = "notwork.constants"
 
 SUBPACKAGES = [
     "notwork.exceptions",
+    "notwork.models",
     CONSTANTS,
 ]
 """Subpackages whose exports the root package re-exports."""

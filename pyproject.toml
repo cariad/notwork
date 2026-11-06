@@ -53,6 +53,7 @@ show_missing = true
 skip_covered = true
 
 [tool.coverage.coverage_conditional_plugin.rules]
+macos-and-windows-only = "sys_platform in ('android', 'linux')"
 posix-only = "sys_platform == 'win32'"
 
 [tool.coverage.run]
