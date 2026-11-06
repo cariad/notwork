@@ -3,8 +3,6 @@ from contextlib import ExitStack
 from errno import EADDRINUSE
 from socket import (
     AF_INET,
-    IPPROTO_IPV6,
-    IPV6_V6ONLY,
     SO_REUSEADDR,
     SOCK_STREAM,
     SOL_SOCKET,
@@ -14,6 +12,7 @@ from socket import (
 )
 
 from ._af_inet6 import AF_INET6
+from ._ipv6_only_option import IPV6_ONLY_OPTION
 from .check_port_is_in_range import check_port_is_in_range
 from .exceptions import PortInUseError
 from .has_ipv6 import has_ipv6
@@ -67,10 +66,9 @@ def _bind(
             _REUSE_ADDRESS,
         )
 
-        if family != AF_INET:
+        if family != AF_INET and IPV6_ONLY_OPTION is not None:
             sock.setsockopt(
-                IPPROTO_IPV6,
-                IPV6_V6ONLY,
+                *IPV6_ONLY_OPTION,
                 not dual_stack,
             )
 
@@ -142,7 +140,8 @@ def claim_port(port: int) -> ClaimedPort:
 
     families = [AF_INET]
 
-    if AF_INET6 is not None and has_ipv6():
+    # Without the IPv6-only option, an IPv6 socket can't be kept from claiming IPv4 too.
+    if AF_INET6 is not None and IPV6_ONLY_OPTION is not None and has_ipv6():
         families.append(AF_INET6)
 
     # Closes every socket bound so far if any bind fails.

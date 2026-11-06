@@ -1,6 +1,9 @@
+import socket as socket_module
+import sys
 from collections.abc import Generator
 from contextlib import closing, contextmanager
 from errno import EACCES, EADDRINUSE
+from importlib import import_module
 from socket import (
     AF_INET,
     AF_INET6,
@@ -15,7 +18,7 @@ from socket import (
 from typing import cast
 from unittest.mock import patch
 
-from pytest import mark, param, raises
+from pytest import MonkeyPatch, mark, param, raises
 
 from notwork import claim_port
 from notwork.exceptions import PortInUseError, PortOutOfRangeError, PortTypeError
@@ -98,6 +101,40 @@ def test_claim_port_claims_ipv4_without_ipv6(free_port: int) -> None:
 
     expect = [
         ("127.0.0.1", free_port),
+    ]
+
+    assert result == expect
+
+
+@mark.parametrize(
+    "name",
+    [
+        "IPPROTO_IPV6",
+        "IPV6_V6ONLY",
+    ],
+)
+def test_notwork_imports_without_ipv6_only_option(
+    free_port: int,
+    monkeypatch: MonkeyPatch,
+    name: str,
+) -> None:
+    """
+    Assert that `notwork` imports, and `claim_port` claims no IPv6 address, when the
+    system doesn't define the IPv6-only socket option.
+    """
+    monkeypatch.delattr(socket_module, name)
+
+    for module in list(sys.modules):
+        if module == "notwork" or module.startswith("notwork."):
+            monkeypatch.delitem(sys.modules, module)
+
+    notwork = import_module("notwork")
+
+    with notwork.claim_port(free_port) as claimed:
+        result = [sock.family for sock in claimed.sockets]
+
+    expect = [
+        AF_INET,
     ]
 
     assert result == expect
