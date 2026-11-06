@@ -1,4 +1,5 @@
 from errno import EADDRNOTAVAIL, EAFNOSUPPORT, EMFILE, EPROTONOSUPPORT
+from socket import AF_INET6
 from unittest.mock import patch
 
 from pytest import raises
@@ -39,6 +40,22 @@ def test_has_ipv6_is_false_when_python_has_no_ipv6() -> None:
     with patch("notwork.has_ipv6._AF_INET6", None):
         result = has_ipv6()
 
+    assert result is False
+
+
+def test_has_ipv6_is_false_when_python_has_no_ipv6_but_af_inet6_exists() -> None:
+    """
+    Assert that `has_ipv6` returns `False` when Python was built without IPv6 but still
+    exports `AF_INET6`.
+    """
+    with (
+        patch("notwork.has_ipv6._PYTHON_HAS_IPV6", False),
+        patch("notwork.has_ipv6._AF_INET6", AF_INET6),
+        patch("notwork.has_ipv6.socket") as mock_socket,
+    ):
+        result = has_ipv6()
+
+    mock_socket.assert_not_called()
     assert result is False
 
 
