@@ -5,11 +5,11 @@ from pytest import mark
 
 from notwork import has_ipv6
 
-holds_wildcards = mark.skipif(
-    sys.platform in ("android", "linux"),
-    reason="Wildcards aren't held on Linux",
+macos_only = mark.skipif(
+    sys.platform != "darwin",
+    reason="macOS-only behaviour",
 )
-"""Decorator for tests that need `claim_port` to hold the wildcard addresses."""
+"""Decorator for tests that must run on macOS only."""
 
 
 needs_dual_stack = mark.skipif(

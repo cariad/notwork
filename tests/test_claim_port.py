@@ -24,7 +24,7 @@ from notwork import claim_port
 from notwork.exceptions import PortInUseError, PortOutOfRangeError, PortTypeError
 
 from .marks import (
-    holds_wildcards,
+    macos_only,
     needs_dual_stack,
     needs_ipv6,
     posix_only,
@@ -424,8 +424,7 @@ def _bound_by_other(
         yield sock
 
 
-@holds_wildcards
-@posix_only
+@macos_only
 @mark.parametrize(
     (
         "host",
@@ -448,14 +447,14 @@ def _bound_by_other(
         ),
     ],
 )
-def test_claim_port_keeps_other_programs_off_wildcards(
+def test_claim_port_keeps_other_programs_off_wildcards_on_macos(
     dual_stack: bool,
     free_port: int,
     host: str,
 ) -> None:
     """
-    Assert that, while a port is claimed, another program can't bind its wildcard
-    addresses.
+    Assert that, while a port is claimed on macOS, another program can't bind its
+    wildcard addresses.
     """
     with (
         _claimed(free_port),
@@ -492,6 +491,78 @@ def test_claim_port_keeps_other_programs_off_wildcards_on_windows(
     """
     Assert that, while a port is claimed on Windows, another program can't bind its
     wildcard addresses with a socket that accepts only IPv4 or only IPv6.
+    """
+    with (
+        _claimed(free_port),
+        raises(OSError) as ex,
+        _bound_by_other(
+            host,
+            free_port,
+            dual_stack=False,
+        ),
+    ):
+        pass
+
+    result = ex.value.errno
+    expect = EACCES
+
+    assert result == expect
+
+
+@posix_only
+@mark.parametrize(
+    "host",
+    [
+        "127.0.0.1",
+        param(
+            "::1",
+            marks=needs_ipv6,
+        ),
+    ],
+)
+def test_claim_port_keeps_other_programs_off_loopbacks_on_posix(
+    free_port: int,
+    host: str,
+) -> None:
+    """
+    Assert that, while a port is claimed on POSIX, another program can't bind its
+    loopback addresses.
+    """
+    with (
+        _claimed(free_port),
+        raises(OSError) as ex,
+        _bound_by_other(
+            host,
+            free_port,
+            dual_stack=False,
+        ),
+    ):
+        pass
+
+    result = ex.value.errno
+    expect = EADDRINUSE
+
+    assert result == expect
+
+
+@windows_only
+@mark.parametrize(
+    "host",
+    [
+        "127.0.0.1",
+        param(
+            "::1",
+            marks=needs_ipv6,
+        ),
+    ],
+)
+def test_claim_port_keeps_other_programs_off_loopbacks_on_windows(
+    free_port: int,
+    host: str,
+) -> None:
+    """
+    Assert that, while a port is claimed on Windows, another program can't bind its
+    loopback addresses.
     """
     with (
         _claimed(free_port),
