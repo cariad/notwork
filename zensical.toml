@@ -1,0 +1,55 @@
+[project]
+copyright = "&copy; 2026 Cariad Eccleston"
+nav = [
+  { "Get started" = "index.md" },
+]
+repo_name = "cariad/notwork"
+repo_url = "https://github.com/cariad/notwork"
+site_author = "Cariad Eccleston"
+site_description = "Python functions for when your network might notwork."
+site_name = "notwork documentation"
+site_url = "https://cariad.github.io/notwork/"
+strict = true
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/cariad/"
+name = "Cariad Eccleston on GitHub"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/linkedin"
+link = "https://www.linkedin.com/in/cariad/"
+name = "Cariad Eccleston on LinkedIn"
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = [
+  "src",
+]
+
+[[project.plugins.mkdocstrings.handlers.python.inventories]]
+url = "https://docs.python.org/3/objects.inv"
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+show_root_full_path = false
+show_root_heading = true
+show_source = true
+
+[project.plugins.mkdocstrings.handlers.python.options.docstring_options]
+returns_multiple_items = false
+
+[project.theme]
+features = [
+  "content.code.copy",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
