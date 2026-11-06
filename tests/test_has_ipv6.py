@@ -37,7 +37,7 @@ def test_has_ipv6_is_false_when_not_available() -> None:
 
 def test_has_ipv6_is_false_when_python_has_no_ipv6() -> None:
     """Assert that `has_ipv6` returns `False` when Python was built without IPv6."""
-    with patch("notwork.has_ipv6._AF_INET6", None):
+    with patch("notwork.has_ipv6.AF_INET6", None):
         result = has_ipv6()
 
     assert result is False
@@ -50,7 +50,7 @@ def test_has_ipv6_is_false_when_python_has_no_ipv6_but_af_inet6_exists() -> None
     """
     with (
         patch("notwork.has_ipv6._PYTHON_HAS_IPV6", False),
-        patch("notwork.has_ipv6._AF_INET6", AF_INET6),
+        patch("notwork.has_ipv6.AF_INET6", AF_INET6),
         patch("notwork.has_ipv6.socket") as mock_socket,
     ):
         result = has_ipv6()

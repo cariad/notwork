@@ -1,9 +1,8 @@
 from errno import EADDRNOTAVAIL, EAFNOSUPPORT, EPROTONOSUPPORT
-from socket import SOCK_STREAM, AddressFamily, socket
+from socket import SOCK_STREAM, socket
 from socket import has_ipv6 as _PYTHON_HAS_IPV6
 
-_AF_INET6 = AddressFamily.__members__.get("AF_INET6")
-"""The IPv6 address family, or `None` if the system doesn't define one."""
+from ._af_inet6 import AF_INET6
 
 _NO_IPV6 = (
     # IPv6 is not available: it's supported, but disabled.
@@ -35,11 +34,11 @@ def has_ipv6() -> bool:
     """
     # Python built with `--disable-ipv6` can still export `AF_INET6` from the
     # system headers, but can't bind IPv6 addresses, so check both.
-    if not _PYTHON_HAS_IPV6 or _AF_INET6 is None:
+    if not _PYTHON_HAS_IPV6 or AF_INET6 is None:
         return False
 
     try:
-        with socket(_AF_INET6, SOCK_STREAM) as sock:
+        with socket(AF_INET6, SOCK_STREAM) as sock:
             sock.bind(("::1", 0))
 
     except OSError as ex:

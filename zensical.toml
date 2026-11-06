@@ -4,10 +4,15 @@ nav = [
   { "Get started" = "index.md" },
   { "Functions" = [
     { "check_port_is_in_range" = "functions/check_port_is_in_range.md" },
+    { "claim_port" = "functions/claim_port.md" },
     { "has_ipv6" = "functions/has_ipv6.md" },
     { "is_port_in_range" = "functions/is_port_in_range.md" },
   ] },
+  { "Models" = [
+    { "ClaimedPort" = "models/claimed_port.md" },
+  ] },
   { "Exceptions" = [
+    { "PortInUseError" = "exceptions/port_in_use_error.md" },
     { "PortOutOfRangeError" = "exceptions/port_out_of_range_error.md" },
     { "PortTypeError" = "exceptions/port_type_error.md" },
   ] },

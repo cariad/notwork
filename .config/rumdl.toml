@@ -19,3 +19,6 @@ strict = true  # Check code blocks too
 "docs/functions/*.md" = [
   "MD041",
 ]
+"docs/models/*.md" = [
+  "MD041",
+]

@@ -1,6 +1,30 @@
 import sys
+from socket import has_dualstack_ipv6
 
 from pytest import mark
+
+from notwork import has_ipv6
+
+macos_only = mark.skipif(
+    sys.platform != "darwin",
+    reason="macOS-only behaviour",
+)
+"""Decorator for tests that must run on macOS only."""
+
+
+needs_dual_stack = mark.skipif(
+    not has_dualstack_ipv6(),
+    reason="No dual-stack sockets",
+)
+"""Decorator for tests that need a socket that accepts IPv4 and IPv6 at once."""
+
+
+needs_ipv6 = mark.skipif(
+    not has_ipv6(),
+    reason="No IPv6",
+)
+"""Decorator for tests that need IPv6."""
+
 
 posix_only = mark.skipif(
     sys.platform == "win32",
