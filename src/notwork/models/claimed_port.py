@@ -10,6 +10,9 @@ class ClaimedPort:
 
     Closing the claimed port, directly or by leaving its context, closes its sockets and
     the sockets that hold the port's wildcard addresses, and releases the port.
+
+    Create claimed ports only via [`claim_port`][notwork.claim_port.claim_port], not by
+    instantiating this class directly.
     """
 
     def __init__(
