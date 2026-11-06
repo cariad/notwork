@@ -2,6 +2,17 @@
 copyright = "&copy; 2026 Cariad Eccleston"
 nav = [
   { "Get started" = "index.md" },
+  { "Functions" = [
+    { "check_port_is_in_range" = "functions/check_port_is_in_range.md" },
+    { "is_port_in_range" = "functions/is_port_in_range.md" },
+  ] },
+  { "Exceptions" = [
+    { "PortOutOfRangeError" = "exceptions/port_out_of_range_error.md" },
+    { "PortTypeError" = "exceptions/port_type_error.md" },
+  ] },
+  { "Constants" = [
+    { "Port" = "constants/port.md" },
+  ] },
 ]
 repo_name = "cariad/notwork"
 repo_url = "https://github.com/cariad/notwork"
@@ -31,6 +42,10 @@ url = "https://docs.python.org/3/objects.inv"
 
 [project.plugins.mkdocstrings.handlers.python.options]
 docstring_style = "google"
+filters = [
+  "!^_",
+]
+merge_init_into_class = true
 show_root_full_path = false
 show_root_heading = true
 show_source = true
