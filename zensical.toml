@@ -17,7 +17,7 @@ nav = [
     { "PortTypeError" = "exceptions/port_type_error.md" },
   ] },
   { "Constants" = [
-    { "Port" = "constants/port.md" },
+    { "Ports" = "constants/ports.md" },
   ] },
 ]
 repo_name = "cariad/notwork"
