@@ -5,6 +5,7 @@ nav = [
   { "Functions" = [
     { "check_port_is_in_range" = "functions/check_port_is_in_range.md" },
     { "claim_port" = "functions/claim_port.md" },
+    { "free_port" = "functions/free_port.md" },
     { "has_ipv6" = "functions/has_ipv6.md" },
     { "is_port_in_range" = "functions/is_port_in_range.md" },
   ] },
