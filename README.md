@@ -63,3 +63,17 @@ with claim_port(8000) as port:
 
 # Leaving the `with` block closed the port.
 ```
+
+### Find a free port
+
+[`free_port`](https://cariad.github.io/notwork/functions/free_port/) returns a port that `claim_port` can claim right now, on every address that `localhost` can mean.
+
+It doesn't hold the port, so another program can take it before you use it: it's intended for tests and simple local tools.
+
+```python
+from notwork import claim_port, free_port
+
+with claim_port(free_port()) as port:
+    for sock in port.sockets:
+        sock.listen()
+```
