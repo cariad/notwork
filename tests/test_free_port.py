@@ -1,6 +1,7 @@
+from errno import EADDRINUSE
 from importlib import import_module
 
-from pytest import MonkeyPatch
+from pytest import MonkeyPatch, raises
 
 from notwork import claim_port, free_port
 from notwork.exceptions import PortInUseError
@@ -38,3 +39,23 @@ def test_free_port_skips_port_in_use(monkeypatch: MonkeyPatch) -> None:
 
     assert len(attempts) == 2
     assert result == attempts[1]
+
+
+def test_free_port_raises_when_every_port_is_in_use(monkeypatch: MonkeyPatch) -> None:
+    """Assert that `free_port` gives up when every port it tries is in use."""
+    attempts: list[int] = []
+
+    def claim_in_use(port: int) -> ClaimedPort:
+        attempts.append(port)
+        raise PortInUseError(port)
+
+    monkeypatch.setattr(_MODULE, "claim_port", claim_in_use)
+
+    with raises(OSError) as ex:
+        free_port()
+
+    result = ex.value
+
+    assert len(attempts) == 100
+    assert result.errno == EADDRINUSE
+    assert str(result) == f"[Errno {EADDRINUSE}] No free port found in 100 attempts"

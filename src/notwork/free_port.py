@@ -1,7 +1,11 @@
+from errno import EADDRINUSE
 from socket import AF_INET, SOCK_STREAM, socket
 
 from .claim_port import claim_port
 from .exceptions import PortInUseError
+
+_ATTEMPTS = 100
+"""The number of ports to try before giving up."""
 
 
 def free_port() -> int:
@@ -17,7 +21,8 @@ def free_port() -> int:
         A port that can be claimed right now.
 
     Raises:
-        OSError: When a port can't be found for any reason other than one being in use.
+        OSError: When none of the ports tried can be claimed, or when a port can't be
+            found for any other reason.
 
     Examples:
         ```python
@@ -28,7 +33,7 @@ def free_port() -> int:
                 sock.listen()
         ```
     """
-    while True:
+    for _ in range(_ATTEMPTS):
         with socket(AF_INET, SOCK_STREAM) as sock:
             sock.bind(("127.0.0.1", 0))
             port: int = sock.getsockname()[1]
@@ -40,3 +45,8 @@ def free_port() -> int:
             continue
 
         return port
+
+    raise OSError(
+        EADDRINUSE,
+        f"No free port found in {_ATTEMPTS} attempts",
+    )
